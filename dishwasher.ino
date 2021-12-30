@@ -28,12 +28,12 @@ int samples[NUMSAMPLES];
 #define tempSensor A0
 
 //Timings
-unsigned long tiempoLlenado = 95000; //Fill time
-unsigned long tiempoSecado = 900000; //Dry time
-unsigned long tiempoLavado = 3300000; //Main wash cycle time
-unsigned long tiempoDrenaje = 120000; //Drain time
-unsigned long tiempoEnjuage = 300000; //Rinse time
-unsigned long tiempoDispensadoJabon = 45000;  //Dispenser motor ON time
+unsigned long fillTime = 95000; //Fill time
+unsigned long dryTime = 900000; //Dry time
+unsigned long mainWashCycleTime = 3300000; //Main wash cycle time
+unsigned long drainTime = 120000; //Drain time
+unsigned long rinseTime = 300000; //Rinse time
+unsigned long dispenserMotorOnTime = 45000;  //Dispenser motor ON time
 
 void setup() {
   lcd.init();                     
@@ -58,35 +58,35 @@ void loop() {
   
   delay(100);
   lcd.setCursor(0,0);
-  lcd.print("Ciclo en 5 seg..."); //Start and 5 sec delay
+  lcd.print("Start in 5 sec..."); //Start and 5 sec delay
   delay(5000);
   
   lcd.clear();
-  llenar();
+  fill();
   delay(100);                     // Fill
 
   lcd.clear();
-  enjuagar();
+  rinse();
   delay(100);                     // Rinse
 
   lcd.clear();
-  drenar();
+  drain();
   delay(100);                     // Drain
 
   lcd.clear();
-  llenar();
+  fill();
   delay(100);                     // Fill again
 
   lcd.clear();
-  lavar();
+  wash();
   delay(100);                     //Main wash
 
   lcd.clear();
-  drenar();
+  drain();
   delay(100);                     //Drain
 
   lcd.clear();
-  secar();
+  dry();
   delay(100);                     //Dry
 
   lcd.clear();
@@ -102,82 +102,81 @@ void loop() {
   
 }
 
-void llenar() { //Fill cycle
+void fill() { //Fill cycle
 
-  unsigned long inicioLlenado = millis(); 
-  unsigned long restante = tiempoLlenado; 
+  unsigned long beginningFill = millis(); 
+  unsigned long remaining = fillTime; 
   unsigned long actualMillis = 0;      
   unsigned long previoMillis = 0;
  
-  while ((millis() - inicioLlenado) < tiempoLlenado) { 
+  while ((millis() - beginningFill) < fillTime) { 
     
     digitalWrite(waterInlet, LOW);
     
     actualMillis = millis();
     if((actualMillis - previoMillis) >= 60000){
-      restante -= 60000;
+      remaining -= 60000;
       previoMillis = actualMillis;
-    
-  }
-    actualizarLCD(1, restante);   
+    }
+    actualizarLCD(1, remaining);   
   }
   digitalWrite(waterInlet, HIGH);
 }
 
-void enjuagar() {
+void rinse() {
 
-  unsigned long inicioEnjuage = millis();
-  unsigned long restante = tiempoEnjuage;
+  unsigned long beginningRinse = millis();
+  unsigned long remaining = rinseTime;
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
   
-  while ((millis() - inicioEnjuage) < tiempoEnjuage) { 
+  while ((millis() - beginningRinse) < rinseTime) { 
     digitalWrite(washMotor, LOW);
 
     actualMillis = millis();
     if((actualMillis - previoMillis) >= 60000){
-      restante -= 60000;
+      remaining -= 60000;
       previoMillis = actualMillis;
   }
-  actualizarLCD(2, restante);
+  actualizarLCD(2, remaining);
  }
  digitalWrite(washMotor, HIGH);
 }
 
-void drenar() {
+void drain() {
 
-  unsigned long inicioDrenaje = millis();
-  unsigned long restante = tiempoDrenaje;
+  unsigned long beginningDrain = millis();
+  unsigned long remaining = drainTime;
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
   
-  while ((millis() - inicioDrenaje) < tiempoDrenaje) {    
+  while ((millis() - beginningDrain) < drainTime) {    
     
     digitalWrite(drainPin, LOW);
     
     actualMillis = millis();
     
     if((actualMillis - previoMillis) >= 60000){
-      restante -= 60000;
+      remaining -= 60000;
       previoMillis = actualMillis; 
   }
-    actualizarLCD(3, restante);
+    actualizarLCD(3, remaining);
   }  
   digitalWrite(drainPin, HIGH);
 }
 
-void lavar() {
-  unsigned long inicioLavado = millis();
-  unsigned long restante = tiempoLavado;
-  double temperatura = temp();
-  bool dispensado = false;
+void wash() {
+  unsigned long beginningWash = millis();
+  unsigned long remaining = mainWashCycleTime;
+  double temperature = temp();
+  bool dispense = false;
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
-  unsigned long inicioDispensado = 0;
+  unsigned long beginningDispense = 0;
   
-  while ((millis() - inicioLavado) < tiempoLavado) { 
+  while ((millis() - beginningWash) < mainWashCycleTime) { 
     
-    temperatura = temp();
+    temperature = temp();
     
     digitalWrite(washMotor, LOW);
     digitalWrite(heaterPin, LOW);
@@ -185,21 +184,21 @@ void lavar() {
     actualMillis = millis();
     
     if((actualMillis - previoMillis) >= 60000){
-      restante -= 60000;
+      remaining -= 60000;
       previoMillis = actualMillis; 
   }
   
-    if((temp() >= 45) && (dispensado == false)){    
+    if((temp() >= 45) && (dispense == false)){    
         digitalWrite(soapDispensor, LOW);
-        dispensado = true;
-        inicioDispensado = millis();
+        dispense = true;
+        beginningDispense = millis();
         }
 
-    if((millis() - inicioDispensado) >= tiempoDispensadoJabon){
+    if((millis() - beginningDispense) >= dispenserMotorOnTime){
         digitalWrite(soapDispensor, HIGH);
       }
             
-    actualizarLCD(4, restante);
+    actualizarLCD(4, remaining);
     
   }
   digitalWrite(washMotor, HIGH);
@@ -207,13 +206,13 @@ void lavar() {
   digitalWrite(soapDispensor, HIGH);
 }
 
-void secar() {
+void dry() {
   unsigned long inicioSecado = millis();
-  unsigned long restante = tiempoSecado;
+  unsigned long restante = dryTime;
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
   
-  while ((millis() - inicioSecado) < tiempoSecado) {    
+  while ((millis() - inicioSecado) < dryTime) {    
     
     digitalWrite(heaterPin, LOW);
     
@@ -260,34 +259,34 @@ double temp(){
   return steinhart;
 }
 
-void actualizarLCD(int modo, unsigned long restante){
+void actualizarLCD(int mode, unsigned long remaining){
   
   lcd.setCursor(0,0);
-  switch (modo){
+  switch (mode){
     case 1:
-    lcd.print("Llenando");
+    lcd.print("Filling");
     break;
     case 2:
-    lcd.print("Enjuage");
+    lcd.print("Rinse");
     break;
     case 3:
-    lcd.print("Drenaje");
+    lcd.print("Drain");
     break;
     case 4:
-    lcd.print("Lavando");
+    lcd.print("Washing");
     lcd.setCursor(9,0);
     lcd.print(temp());
     lcd.print(" C");
     break;
     case 5:
-    lcd.print("Secando");
+    lcd.print("Drying");
     break;
     case 6:
-    lcd.print("Terminado! :D");
+    lcd.print("Finished! :D");
     break;
     }
     
   lcd.setCursor(0,1);
-  lcd.print("Min. Rest. ");
-  lcd.print(restante/60000);
+  lcd.print("Min. Remaining. ");
+  lcd.print(remaining/60000);
   }
