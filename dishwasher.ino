@@ -1,5 +1,7 @@
 #include  <Wire.h>
 #include  <LiquidCrystal_I2C.h>
+#include <Button.h>
+
 
 LiquidCrystal_I2C lcd(0x27,16,2);
 
@@ -17,6 +19,12 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 #define SERIESRESISTOR 50000    
  
 int samples[NUMSAMPLES];
+
+//buttin pins
+#define startButtonPin 8
+Button startButton(startButtonPin);
+#define stopButtonPin 8
+Button stopButton(stopButtonPin);
 
 //Output pins
 #define ventPin 7
@@ -52,54 +60,56 @@ void setup() {
   digitalWrite(drainPin, HIGH);
   digitalWrite(washMotor, HIGH);
   digitalWrite(heaterPin, HIGH);
+
+  startButton.begin();
 }
 
 void loop() {
-  
-  delay(100);
-  lcd.setCursor(0,0);
-  lcd.print("Start in 5 sec..."); //Start and 5 sec delay
-  delay(5000);
-  
-  lcd.clear();
-  fill();
-  delay(100);                     // Fill
+  if (startButton.pressed()) { 
+    delay(100);
+    lcd.setCursor(0,0);
+    lcd.print("Start in 5 sec..."); //Start and 5 sec delay
+    delay(5000);
+    
+    lcd.clear();
+    fill();
+    delay(100);                     // Fill
 
-  lcd.clear();
-  rinse();
-  delay(100);                     // Rinse
+    lcd.clear();
+    rinse();
+    delay(100);                     // Rinse
 
-  lcd.clear();
-  drain();
-  delay(100);                     // Drain
+    lcd.clear();
+    drain();
+    delay(100);                     // Drain
 
-  lcd.clear();
-  fill();
-  delay(100);                     // Fill again
+    lcd.clear();
+    fill();
+    delay(100);                     // Fill again
 
-  lcd.clear();
-  wash();
-  delay(100);                     //Main wash
+    lcd.clear();
+    wash();
+    delay(100);                     //Main wash
 
-  lcd.clear();
-  drain();
-  delay(100);                     //Drain
+    lcd.clear();
+    drain();
+    delay(100);                     //Drain
 
-  lcd.clear();
-  dry();
-  delay(100);                     //Dry
+    lcd.clear();
+    dry();
+    delay(100);                     //Dry
 
-  lcd.clear();
-  while(true){
-  actualizarLCD(6, 0);
-  digitalWrite(ventPin, LOW);
-  digitalWrite(soapDispensor, HIGH);
-  digitalWrite(waterInlet, HIGH);
-  digitalWrite(drainPin, HIGH);
-  digitalWrite(washMotor, HIGH);
-  digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
-  }
-  
+    lcd.clear();
+    while(true){
+      actualizarLCD(6, 0);
+      digitalWrite(ventPin, LOW);
+      digitalWrite(soapDispensor, HIGH);
+      digitalWrite(waterInlet, HIGH);
+      digitalWrite(drainPin, HIGH);
+      digitalWrite(washMotor, HIGH);
+      digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
+    }
+  }  
 }
 
 void fill() { //Fill cycle
@@ -141,6 +151,28 @@ void rinse() {
   actualizarLCD(2, remaining);
  }
  digitalWrite(washMotor, HIGH);
+}
+
+void drainAndStop() {
+  delay(100);
+  digitalWrite(ventPin, LOW);
+  digitalWrite(soapDispensor, HIGH);
+  digitalWrite(waterInlet, HIGH);
+  digitalWrite(drainPin, HIGH);
+  digitalWrite(washMotor, HIGH);
+  digitalWrite(heaterPin, HIGH);
+  delay(100);
+
+  drain();
+
+  lcd.clear();
+  actualizarLCD(6, 0);
+  digitalWrite(ventPin, LOW);
+  digitalWrite(soapDispensor, HIGH);
+  digitalWrite(waterInlet, HIGH);
+  digitalWrite(drainPin, HIGH);
+  digitalWrite(washMotor, HIGH);
+  digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
 }
 
 void drain() {
