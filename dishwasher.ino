@@ -1,9 +1,9 @@
+#include <LiquidCrystal.h>
 #include  <Wire.h>
-#include  <LiquidCrystal_I2C.h>
 #include <Button.h>
 
 
-LiquidCrystal_I2C lcd(0x27,16,2);
+LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 
 //Thermistor configuration
 // resistance at 25 degrees C
@@ -23,7 +23,7 @@ int samples[NUMSAMPLES];
 //buttin pins
 #define startButtonPin 8
 Button startButton(startButtonPin);
-#define stopButtonPin 8
+#define stopButtonPin 9
 Button stopButton(stopButtonPin);
 
 //Output pins
@@ -44,8 +44,8 @@ unsigned long rinseTime = 300000; //Rinse time
 unsigned long dispenserMotorOnTime = 45000;  //Dispenser motor ON time
 
 void setup() {
-  lcd.init();                     
-  lcd.backlight();
+  lcd.begin(16,2);
+  lcd.clear();
   
   pinMode(ventPin, OUTPUT);
   pinMode(soapDispensor, OUTPUT);
