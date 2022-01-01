@@ -2,7 +2,7 @@
 #include  <Wire.h>
 #include <Button.h>
 
-
+// Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 
 //Thermistor configuration
@@ -65,7 +65,7 @@ void setup() {
 }
 
 void loop() {
-  if (startButton.pressed()) { 
+
     delay(100);
     lcd.setCursor(0,0);
     lcd.print("Start in 5 sec..."); //Start and 5 sec delay
@@ -109,7 +109,7 @@ void loop() {
       digitalWrite(washMotor, HIGH);
       digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
     }
-  }  
+    
 }
 
 void fill() { //Fill cycle
@@ -218,17 +218,17 @@ void wash() {
     if((actualMillis - previoMillis) >= 60000){
       remaining -= 60000;
       previoMillis = actualMillis; 
-  }
+    }
   
     if((temp() >= 45) && (dispense == false)){    
-        digitalWrite(soapDispensor, LOW);
-        dispense = true;
-        beginningDispense = millis();
-        }
+      digitalWrite(soapDispensor, LOW);
+      dispense = true;
+      beginningDispense = millis();
+    }
 
     if((millis() - beginningDispense) >= dispenserMotorOnTime){
-        digitalWrite(soapDispensor, HIGH);
-      }
+      digitalWrite(soapDispensor, HIGH);
+    }
             
     actualizarLCD(4, remaining);
     
@@ -319,6 +319,6 @@ void actualizarLCD(int mode, unsigned long remaining){
     }
     
   lcd.setCursor(0,1);
-  lcd.print("Min. Remaining. ");
+  lcd.print("Min. Remain. ");
   lcd.print(remaining/60000);
   }
