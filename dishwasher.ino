@@ -43,6 +43,8 @@ unsigned long drainTime = 120000; //Drain time
 unsigned long rinseTime = 300000; //Rinse time
 unsigned long dispenserMotorOnTime = 45000;  //Dispenser motor ON time
 
+bool run;
+
 void setup() {
   lcd.begin(16,2);
   lcd.clear();
@@ -65,7 +67,8 @@ void setup() {
 }
 
 void loop() {
-
+  if (startButton.pressed()) 
+  {
     delay(100);
     lcd.setCursor(0,0);
     lcd.print("Start in 5 sec..."); //Start and 5 sec delay
@@ -109,7 +112,7 @@ void loop() {
       digitalWrite(washMotor, HIGH);
       digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
     }
-    
+  } 
 }
 
 void fill() { //Fill cycle
@@ -240,7 +243,7 @@ void wash() {
 
 void dry() {
   unsigned long inicioSecado = millis();
-  unsigned long restante = dryTime;
+  unsigned long remaining = dryTime;
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
   
@@ -251,13 +254,13 @@ void dry() {
     actualMillis = millis();
     
     if((actualMillis - previoMillis) >= 60000){
-      restante -= 60000;
+      remaining -= 60000;
       previoMillis = actualMillis; 
   }
-    if(restante <= 420000){
+    if(remaining <= 420000){
       digitalWrite(ventPin, HIGH);
       }
-    actualizarLCD(5, restante);
+    actualizarLCD(5, remaining);
   }  
   digitalWrite(heaterPin, HIGH);
   digitalWrite(ventPin, LOW);
