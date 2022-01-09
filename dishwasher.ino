@@ -7,9 +7,9 @@ LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 
 //Thermistor configuration
 // resistance at 25 degrees C
-#define THERMISTORNOMINAL 50000     
+//#define THERMISTORNOMINAL 50000     
 // temp. for nominal resistance (almost always 25 C)
-#define TEMPERATURENOMINAL 25   
+//#define TEMPERATURENOMINAL 25   
 // how many samples to take and average, more takes longer
 // but is more 'smooth'
 #define NUMSAMPLES 5
@@ -26,6 +26,10 @@ Button startButton(startButtonPin);
 #define stopButtonPin 9
 Button stopButton(stopButtonPin);
 
+// water divert to top and bottom sprayers
+#define divertSensorPin 10
+Button divertSensor(divertSensorPin);
+
 //Output pins
 #define ventPin 7
 #define soapDispensor 6
@@ -33,7 +37,8 @@ Button stopButton(stopButtonPin);
 #define drainPin 4
 #define washMotor 3
 #define heaterPin 2
-#define tempSensor A0
+#define divertMotorPin 11
+//#define tempSensor A0
 
 //Timings
 unsigned long fillTime = 95000; //Fill time
@@ -55,6 +60,7 @@ void setup() {
   pinMode(drainPin, OUTPUT);
   pinMode(washMotor, OUTPUT);
   pinMode(heaterPin, OUTPUT);
+  pinMode(divertMotorPin, OUTPUT);
   
   digitalWrite(ventPin, LOW);
   digitalWrite(soapDispensor, HIGH);
@@ -62,8 +68,10 @@ void setup() {
   digitalWrite(drainPin, HIGH);
   digitalWrite(washMotor, HIGH);
   digitalWrite(heaterPin, HIGH);
+  digitalWrite(divertMotorPin, HIGH);
 
   startButton.begin();
+  divertSensor.begin();
 }
 
 void loop() {
@@ -137,9 +145,10 @@ void fill() { //Fill cycle
 }
 
 void rinse() {
-
+  bool diverted = false;
   unsigned long beginningRinse = millis();
   unsigned long remaining = rinseTime;
+  unsigned long divertTime = rinseTime / 2;
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
   
@@ -150,10 +159,34 @@ void rinse() {
     if((actualMillis - previoMillis) >= 60000){
       remaining -= 60000;
       previoMillis = actualMillis;
-  }
-  actualizarLCD(2, remaining);
+    }
+    actualizarLCD(2, remaining);
+
+    if (diverted == false && remaining <= divertTime) {
+      diverted = true;
+      divert();
+    }
  }
  digitalWrite(washMotor, HIGH);
+}
+
+void divert() {
+  bool divertComplete = false; 
+  bool divertStarted = false;
+  digitalWrite(washMotor, HIGH);
+  digitalWrite(divertMotorPin, LOW);
+  delay(1000);
+  while (!divertComplete) {
+    if (divertStarted && !divertSensor.pressed()) {
+      divertComplete = true;
+    }
+    if (divertSensor.pressed())
+      divertStarted = true;
+  }
+
+  digitalWrite(divertMotorPin, HIGH);
+  delay(1000);
+  digitalWrite(washMotor, LOW);
 }
 
 void drainAndStop() {
@@ -201,9 +234,12 @@ void drain() {
 }
 
 void wash() {
+  digitalWrite(ventPin, HIGH);
+  bool diverted = false;
   unsigned long beginningWash = millis();
   unsigned long remaining = mainWashCycleTime;
-  double temperature = temp();
+  unsigned long divertTime = mainWashCycleTime / 2;
+  //double temperature = temp();
   bool dispense = false;
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
@@ -211,7 +247,7 @@ void wash() {
   
   while ((millis() - beginningWash) < mainWashCycleTime) { 
     
-    temperature = temp();
+    //temperature = temp();
     
     digitalWrite(washMotor, LOW);
     digitalWrite(heaterPin, LOW);
@@ -222,12 +258,24 @@ void wash() {
       remaining -= 60000;
       previoMillis = actualMillis; 
     }
+
+    // dispense soap right away, this dishwasher doesn't have temp sensor
+    digitalWrite(soapDispensor, LOW);
+    dispense = true;
+    beginningDispense = millis();
+    
+    if (diverted == false && remaining <= divertTime) {
+      diverted = true;
+      divert();
+    }
   
+  /*
     if((temp() >= 45) && (dispense == false)){    
       digitalWrite(soapDispensor, LOW);
       dispense = true;
       beginningDispense = millis();
     }
+*/
 
     if((millis() - beginningDispense) >= dispenserMotorOnTime){
       digitalWrite(soapDispensor, HIGH);
@@ -266,6 +314,7 @@ void dry() {
   digitalWrite(ventPin, LOW);
 }
 
+/*
 double temp(){
   uint8_t i;
   float average;
@@ -293,6 +342,7 @@ double temp(){
 
   return steinhart;
 }
+*/
 
 void actualizarLCD(int mode, unsigned long remaining){
   
@@ -310,8 +360,8 @@ void actualizarLCD(int mode, unsigned long remaining){
     case 4:
     lcd.print("Washing");
     lcd.setCursor(9,0);
-    lcd.print(temp());
-    lcd.print(" C");
+    //lcd.print(temp());
+    //lcd.print(" C");
     break;
     case 5:
     lcd.print("Drying");
