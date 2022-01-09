@@ -383,6 +383,7 @@ void actualizarLCD(int mode, unsigned long remaining){
   lcd.setCursor(0,1);
   lcd.print("Min. Remain. ");
   lcd.print(remaining/60000);
+  lcd.print(" ");
 }
 
 void stopNowCheck() {
