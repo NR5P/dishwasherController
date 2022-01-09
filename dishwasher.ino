@@ -4,13 +4,13 @@
 
 /*
 TODO:
-1. fix minutes remaining under 10 minutes wash and dry
+1. [done] fix minutes remaining under 10 minutes wash and dry
 2. make sure soap dispenser works
 3. add pause button
 4. add stop button
 5. making sure the diverter is working
 6. add protection if heater on to long then shut off
-7. button for reset and STOP
+8. [done] add rinse after wash
 */
 
 // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
@@ -36,6 +36,8 @@ int samples[NUMSAMPLES];
 Button startButton(startButtonPin);
 #define stopButtonPin 9
 Button stopButton(stopButtonPin);
+#define pauseButtonPin 12
+Button pauseButton(stopButtonPin);
 
 // water divert to top and bottom sprayers
 #define divertSensorPin 10
@@ -82,6 +84,8 @@ void setup() {
   digitalWrite(divertMotorPin, HIGH);
 
   startButton.begin();
+  stopButton.begin();
+  pauseButton.begin();
   divertSensor.begin();
 }
 
@@ -116,6 +120,18 @@ void loop() {
     lcd.clear();
     drain();
     delay(100);                     //Drain
+
+    lcd.clear();
+    fill();
+    delay(100);                     // Fill
+
+    lcd.clear();
+    rinse();
+    delay(100);                     // Rinse
+
+    lcd.clear();
+    drain();
+    delay(100);                     // Drain
 
     lcd.clear();
     dry();
@@ -200,30 +216,7 @@ void divert() {
   digitalWrite(washMotor, LOW);
 }
 
-void drainAndStop() {
-  delay(100);
-  digitalWrite(ventPin, LOW);
-  digitalWrite(soapDispensor, HIGH);
-  digitalWrite(waterInlet, HIGH);
-  digitalWrite(drainPin, HIGH);
-  digitalWrite(washMotor, HIGH);
-  digitalWrite(heaterPin, HIGH);
-  delay(100);
-
-  drain();
-
-  lcd.clear();
-  actualizarLCD(6, 0);
-  digitalWrite(ventPin, LOW);
-  digitalWrite(soapDispensor, HIGH);
-  digitalWrite(waterInlet, HIGH);
-  digitalWrite(drainPin, HIGH);
-  digitalWrite(washMotor, HIGH);
-  digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
-}
-
 void drain() {
-
   unsigned long beginningDrain = millis();
   unsigned long remaining = drainTime;
   unsigned long actualMillis = 0;
@@ -356,7 +349,7 @@ double temp(){
 */
 
 void actualizarLCD(int mode, unsigned long remaining){
-  
+  lcd.clear();
   lcd.setCursor(0,0);
   switch (mode){
     case 1:
