@@ -61,7 +61,7 @@ unsigned long drainTime = 120000; //Drain time
 unsigned long rinseTime = 300000; //Rinse time
 unsigned long dispenserMotorOnTime = 45000;  //Dispenser motor ON time
 
-bool run;
+bool stopNow = false;
 
 void setup() {
   lcd.begin(16,2);
@@ -92,6 +92,7 @@ void setup() {
 void loop() {
   if (startButton.pressed()) 
   {
+    lcd.clear();
     delay(100);
     lcd.setCursor(0,0);
     lcd.print("Start in 5 sec..."); //Start and 5 sec delay
@@ -157,8 +158,8 @@ void fill() { //Fill cycle
   unsigned long actualMillis = 0;      
   unsigned long previoMillis = 0;
  
-  while ((millis() - beginningFill) < fillTime) { 
-    
+  while (((millis() - beginningFill) < fillTime) && stopNow == false) { 
+    stopNowCheck();    
     digitalWrite(waterInlet, LOW);
     
     actualMillis = millis();
@@ -179,7 +180,8 @@ void rinse() {
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
   
-  while ((millis() - beginningRinse) < rinseTime) { 
+  while (((millis() - beginningRinse) < rinseTime) && stopNow == false) { 
+    stopNowCheck();
     digitalWrite(washMotor, LOW);
 
     actualMillis = millis();
@@ -249,8 +251,8 @@ void wash() {
   unsigned long previoMillis = 0;
   unsigned long beginningDispense = 0;
   
-  while ((millis() - beginningWash) < mainWashCycleTime) { 
-    
+  while (((millis() - beginningWash) < mainWashCycleTime) && stopNow == false) { 
+    stopNowCheck(); 
     //temperature = temp();
     
     digitalWrite(washMotor, LOW);
@@ -299,8 +301,8 @@ void dry() {
   unsigned long actualMillis = 0;
   unsigned long previoMillis = 0;
   
-  while ((millis() - inicioSecado) < dryTime) {    
-    
+  while (((millis() - inicioSecado) < dryTime) && stopNow == false) {    
+    stopNowCheck(); 
     digitalWrite(heaterPin, LOW);
     
     actualMillis = millis();
@@ -378,4 +380,13 @@ void actualizarLCD(int mode, unsigned long remaining){
   lcd.setCursor(0,1);
   lcd.print("Min. Remain. ");
   lcd.print(remaining/60000);
+}
+
+void stopNowCheck() {
+  if (stopButton.pressed()) {
+    lcd.clear();
+    lcd.setCursor(0,1);
+    lcd.print("STOP!!!");
+    stopNow = true;
   }
+}
