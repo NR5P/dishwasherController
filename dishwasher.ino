@@ -7,7 +7,7 @@ TODO:
 1. [done] fix minutes remaining under 10 minutes wash and dry
 2. make sure soap dispenser works
 3. add pause button
-4. add stop button
+4. [done] add stop button
 5. making sure the diverter is working
 6. add protection if heater on to long then shut off
 8. [done] add rinse after wash
@@ -253,6 +253,7 @@ void wash() {
   
   while (((millis() - beginningWash) < mainWashCycleTime) && stopNow == false) { 
     stopNowCheck(); 
+    pauseWash(remaining);
     //temperature = temp();
     
     digitalWrite(washMotor, LOW);
@@ -351,7 +352,6 @@ double temp(){
 */
 
 void actualizarLCD(int mode, unsigned long remaining){
-  lcd.clear();
   lcd.setCursor(0,0);
   switch (mode){
     case 1:
@@ -375,6 +375,9 @@ void actualizarLCD(int mode, unsigned long remaining){
     case 6:
     lcd.print("Finished! :D");
     break;
+    case 7:
+    lcd.print("PAUSED WASH");
+    break;
     }
     
   lcd.setCursor(0,1);
@@ -389,4 +392,24 @@ void stopNowCheck() {
     lcd.print("STOP!!!");
     stopNow = true;
   }
+}
+
+void pauseWash(unsigned long remaining) {
+  bool paused = false;
+  if (pauseButton.pressed()) {
+    paused = true;
+    lcd.clear();
+    while (paused) {
+      actualizarLCD(7, remaining);
+      digitalWrite(washMotor, HIGH);
+      digitalWrite(heaterPin, HIGH);
+
+      if (pauseButton.pressed()) { 
+        paused = false;
+      }
+    }
+  }
+
+  digitalWrite(washMotor, LOW);
+  digitalWrite(heaterPin, LOW);
 }
