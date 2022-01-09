@@ -1,0 +1,1 @@
+this is for a standard dishwasher, includes start, stop, and pause wash button and 16x2 display. My dishwasher did not have thermostat temperature info sent back to controller, it just has an on and off thermostat that is inline with heater connection so there was no need for temperature reading. 
