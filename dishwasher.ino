@@ -10,8 +10,7 @@ TODO:
 4. add stop button
 5. making sure the diverter is working
 6. add protection if heater on to long then shut off
-
-6. add this stuff to github
+7. button for reset and STOP
 */
 
 // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
