@@ -162,7 +162,8 @@ void fill() { //Fill cycle
   unsigned long previoMillis = 0;
  
   while (((millis() - beginningFill) < fillTime) && stopNow == false) { 
-    digitalWrite(waterInlet, LOW);
+    if (!stopNow)
+      digitalWrite(waterInlet, LOW);
     
     actualMillis = millis();
     if((actualMillis - previoMillis) >= 60000){
@@ -183,7 +184,8 @@ void rinse() {
   unsigned long previoMillis = 0;
   
   while (((millis() - beginningRinse) < rinseTime) && stopNow == false) { 
-    digitalWrite(washMotor, LOW);
+    if (!stopNow)
+      digitalWrite(washMotor, LOW);
 
     actualMillis = millis();
     if((actualMillis - previoMillis) >= 60000){
@@ -260,9 +262,10 @@ void wash() {
   while (((millis() - beginningWash) < mainWashCycleTime) && stopNow == false) { 
     pauseWash(remaining);
     //temperature = temp();
-    
-    digitalWrite(washMotor, LOW);
-    digitalWrite(heaterPin, LOW);
+    if (!stopNow) {
+      digitalWrite(washMotor, LOW);
+      digitalWrite(heaterPin, LOW);
+    } 
     
     actualMillis = millis();
     
@@ -308,7 +311,8 @@ void dry() {
   unsigned long previoMillis = 0;
   
   while (((millis() - inicioSecado) < dryTime) && stopNow == false) {    
-    digitalWrite(heaterPin, LOW);
+    if (!stopNow)
+      digitalWrite(heaterPin, LOW);
     
     actualMillis = millis();
     
@@ -391,6 +395,14 @@ void actualizarLCD(int mode, unsigned long remaining){
 }
 
 void stopRightNow() {
+  digitalWrite(ventPin, LOW);
+  digitalWrite(soapDispensor, HIGH);
+  digitalWrite(waterInlet, HIGH);
+  digitalWrite(drainPin, HIGH);
+  digitalWrite(washMotor, HIGH);
+  digitalWrite(heaterPin, HIGH);
+  digitalWrite(divertMotorPin, HIGH);
+
   lcd.clear();
   lcd.setCursor(0,1);
   lcd.print("STOP!!!");
@@ -402,7 +414,7 @@ void pauseWash(unsigned long remaining) {
   if (pauseButton.pressed()) {
     paused = true;
     lcd.clear();
-    while (paused) {
+    while (paused && !stopNow) {
       actualizarLCD(7, remaining);
       digitalWrite(washMotor, HIGH);
       digitalWrite(heaterPin, HIGH);
@@ -413,6 +425,9 @@ void pauseWash(unsigned long remaining) {
     }
   }
 
-  digitalWrite(washMotor, LOW);
-  digitalWrite(heaterPin, LOW);
+  if (!stopNow)
+  {
+    digitalWrite(washMotor, LOW);
+    digitalWrite(heaterPin, LOW);
+  }
 }
