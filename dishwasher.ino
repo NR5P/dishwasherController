@@ -34,14 +34,15 @@ int samples[NUMSAMPLES];
 //buttin pins
 #define startButtonPin 8
 Button startButton(startButtonPin);
-#define stopButtonPin 9
-Button stopButton(stopButtonPin);
 #define pauseButtonPin 12
-Button pauseButton(stopButtonPin);
+Button pauseButton(pauseButtonPin);
 
 // water divert to top and bottom sprayers
 #define divertSensorPin 10
 Button divertSensor(divertSensorPin);
+
+// interrupt for stop
+#define stopButtonPin 21
 
 //Output pins
 #define ventPin 7
@@ -61,11 +62,14 @@ unsigned long drainTime = 120000; //Drain time
 unsigned long rinseTime = 300000; //Rinse time
 unsigned long dispenserMotorOnTime = 45000;  //Dispenser motor ON time
 
-bool stopNow = false;
+volatile bool stopNow = false;
 
 void setup() {
   lcd.begin(16,2);
   lcd.clear();
+
+  pinMode(stopButtonPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(stopButtonPin), stopRightNow, CHANGE);
   
   pinMode(ventPin, OUTPUT);
   pinMode(soapDispensor, OUTPUT);
@@ -84,7 +88,6 @@ void setup() {
   digitalWrite(divertMotorPin, HIGH);
 
   startButton.begin();
-  stopButton.begin();
   pauseButton.begin();
   divertSensor.begin();
 }
@@ -159,7 +162,6 @@ void fill() { //Fill cycle
   unsigned long previoMillis = 0;
  
   while (((millis() - beginningFill) < fillTime) && stopNow == false) { 
-    stopNowCheck();    
     digitalWrite(waterInlet, LOW);
     
     actualMillis = millis();
@@ -181,7 +183,6 @@ void rinse() {
   unsigned long previoMillis = 0;
   
   while (((millis() - beginningRinse) < rinseTime) && stopNow == false) { 
-    stopNowCheck();
     digitalWrite(washMotor, LOW);
 
     actualMillis = millis();
@@ -193,16 +194,19 @@ void rinse() {
 
     if (diverted == false && remaining <= divertTime) {
       diverted = true;
-      divert();
+      divert(false);
     }
  }
  digitalWrite(washMotor, HIGH);
 }
 
-void divert() {
+void divert(bool heaterOn) {
   bool divertComplete = false; 
   bool divertStarted = false;
   digitalWrite(washMotor, HIGH);
+  if (heaterOn)
+    digitalWrite(heaterPin, HIGH);
+
   delay(1000);
   digitalWrite(divertMotorPin, LOW);
   while (!divertComplete) {
@@ -216,6 +220,8 @@ void divert() {
   digitalWrite(divertMotorPin, HIGH);
   delay(1000);
   digitalWrite(washMotor, LOW);
+  if (heaterOn)
+    digitalWrite(heaterPin, LOW);
 }
 
 void drain() {
@@ -252,7 +258,6 @@ void wash() {
   unsigned long beginningDispense = 0;
   
   while (((millis() - beginningWash) < mainWashCycleTime) && stopNow == false) { 
-    stopNowCheck(); 
     pauseWash(remaining);
     //temperature = temp();
     
@@ -273,7 +278,7 @@ void wash() {
     
     if (diverted == false && remaining <= divertTime) {
       diverted = true;
-      divert();
+      divert(true);
     }
   
   /*
@@ -303,7 +308,6 @@ void dry() {
   unsigned long previoMillis = 0;
   
   while (((millis() - inicioSecado) < dryTime) && stopNow == false) {    
-    stopNowCheck(); 
     digitalWrite(heaterPin, LOW);
     
     actualMillis = millis();
@@ -386,13 +390,11 @@ void actualizarLCD(int mode, unsigned long remaining){
   lcd.print(" ");
 }
 
-void stopNowCheck() {
-  if (stopButton.pressed()) {
-    lcd.clear();
-    lcd.setCursor(0,1);
-    lcd.print("STOP!!!");
-    stopNow = true;
-  }
+void stopRightNow() {
+  lcd.clear();
+  lcd.setCursor(0,1);
+  lcd.print("STOP!!!");
+  stopNow = true;
 }
 
 void pauseWash(unsigned long remaining) {
