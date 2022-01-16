@@ -406,6 +406,7 @@ void stopRightNow() {
   lcd.clear();
   lcd.setCursor(0,1);
   lcd.print("STOP!!!");
+  delay(1000);
   stopNow = true;
 }
 
@@ -414,6 +415,10 @@ void pauseWash(unsigned long remaining) {
   if (pauseButton.pressed()) {
     paused = true;
     lcd.clear();
+    lcd.setCursor(0,1);
+    lcd.print("PAUSE!!!");
+    delay(1000);
+
     while (paused && !stopNow) {
       actualizarLCD(7, remaining);
       digitalWrite(washMotor, HIGH);
