@@ -69,7 +69,7 @@ void setup() {
   lcd.clear();
 
   pinMode(stopButtonPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(stopButtonPin), stopRightNow, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(stopButtonPin), stopRightNow, CHANGE);
   
   pinMode(ventPin, OUTPUT);
   pinMode(soapDispensor, OUTPUT);
@@ -95,6 +95,7 @@ void setup() {
 void loop() {
   if (startButton.pressed()) 
   {
+    divert(false, false);
     lcd.clear();
     delay(100);
     lcd.setCursor(0,0);
@@ -196,13 +197,13 @@ void rinse() {
 
     if (diverted == false && remaining <= divertTime) {
       diverted = true;
-      divert(false);
+      divert(false, true);
     }
  }
  digitalWrite(washMotor, HIGH);
 }
 
-void divert(bool heaterOn) {
+void divert(bool heaterOn, bool washOn) {
   bool divertComplete = false; 
   bool divertStarted = false;
   digitalWrite(washMotor, HIGH);
@@ -211,17 +212,19 @@ void divert(bool heaterOn) {
 
   delay(1000);
   digitalWrite(divertMotorPin, LOW);
+  delay(500);
   while (!divertComplete) {
-    if (divertStarted && !divertSensor.pressed()) {
+    if (divertStarted && divertSensor.pressed()) {
       divertComplete = true;
     }
-    if (divertSensor.pressed())
+    if (divertSensor.released())
       divertStarted = true;
   }
 
   digitalWrite(divertMotorPin, HIGH);
   delay(1000);
-  digitalWrite(washMotor, LOW);
+  if (washOn)
+    digitalWrite(washMotor, LOW);
   if (heaterOn)
     digitalWrite(heaterPin, LOW);
 }
@@ -260,7 +263,7 @@ void wash() {
   unsigned long beginningDispense = 0;
   
   while (((millis() - beginningWash) < mainWashCycleTime) && stopNow == false) { 
-    pauseWash(remaining);
+    //pauseWash(remaining);
     //temperature = temp();
     if (!stopNow) {
       digitalWrite(washMotor, LOW);
@@ -281,7 +284,7 @@ void wash() {
     
     if (diverted == false && remaining <= divertTime) {
       diverted = true;
-      divert(true);
+      divert(true, true);
     }
   
   /*
