@@ -2,17 +2,6 @@
 #include  <Wire.h>
 #include <Button.h>
 
-/*
-TODO:
-1. [done] fix minutes remaining under 10 minutes wash and dry
-2. make sure soap dispenser works
-3. add pause button
-4. [done] add stop button
-5. making sure the diverter is working
-6. add protection if heater on to long then shut off
-8. [done] add rinse after wash
-*/
-
 // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 
@@ -308,6 +297,7 @@ void wash() {
 }
 
 void dry() {
+  digitalWrite(ventPin, LOW);
   unsigned long inicioSecado = millis();
   unsigned long remaining = dryTime;
   unsigned long actualMillis = 0;
