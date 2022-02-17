@@ -5,21 +5,6 @@
 // Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(22, 24, 26, 28, 30, 32);
 
-//Thermistor configuration
-// resistance at 25 degrees C
-//#define THERMISTORNOMINAL 50000     
-// temp. for nominal resistance (almost always 25 C)
-//#define TEMPERATURENOMINAL 25   
-// how many samples to take and average, more takes longer
-// but is more 'smooth'
-#define NUMSAMPLES 5
-// The beta coefficient of the thermistor (usually 3000-4000)
-#define BCOEFFICIENT 2000
-// the value of the 'other' resistor
-#define SERIESRESISTOR 50000    
- 
-int samples[NUMSAMPLES];
-
 //buttin pins
 #define startButtonPin 8
 Button startButton(startButtonPin);
@@ -41,7 +26,6 @@ Button divertSensor(divertSensorPin);
 #define washMotor 3
 #define heaterPin 2
 #define divertMotorPin 11
-//#define tempSensor A0
 
 //Timings
 unsigned long fillTime = 95000; //Fill time
@@ -132,15 +116,13 @@ void loop() {
     delay(100);                     //Dry
 
     lcd.clear();
-    while(true){
-      actualizarLCD(6, 0);
-      digitalWrite(ventPin, LOW);
-      digitalWrite(soapDispensor, HIGH);
-      digitalWrite(waterInlet, HIGH);
-      digitalWrite(drainPin, HIGH);
-      digitalWrite(washMotor, HIGH);
-      digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
-    }
+    actualizarLCD(6, 0);
+    digitalWrite(ventPin, LOW);
+    digitalWrite(soapDispensor, HIGH);
+    digitalWrite(waterInlet, HIGH);
+    digitalWrite(drainPin, HIGH);
+    digitalWrite(washMotor, HIGH);
+    digitalWrite(heaterPin, HIGH);      //Informs cycle complete and waits for power off
   } 
 }
 
@@ -322,36 +304,6 @@ void dry() {
   digitalWrite(ventPin, LOW);
 }
 
-/*
-double temp(){
-  uint8_t i;
-  float average;
- 
-  // take N samples in a row, with a slight delay
-  for (i=0; i< NUMSAMPLES; i++) {
-   samples[i] = analogRead(tempSensor);
-   delay(10);
-  }
-  
-  // average all the samples out
-  average = 0;
-  for (i=0; i< NUMSAMPLES; i++) {
-     average += samples[i];
-  }
-  average /= NUMSAMPLES;
- 
-  float steinhart;
-  steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
-  steinhart = log(steinhart);                  // ln(R/Ro)
-  steinhart /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
-  steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
-  steinhart = 1.0 / steinhart;                 // Invert
-  steinhart -= 273.15;                         // convert to C
-
-  return steinhart;
-}
-*/
-
 void actualizarLCD(int mode, unsigned long remaining){
   lcd.setCursor(0,0);
   switch (mode){
@@ -367,8 +319,6 @@ void actualizarLCD(int mode, unsigned long remaining){
     case 4:
     lcd.print("Washing");
     lcd.setCursor(9,0);
-    //lcd.print(temp());
-    //lcd.print(" C");
     break;
     case 5:
     lcd.print("Drying");
