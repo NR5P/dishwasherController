@@ -68,6 +68,7 @@ void setup() {
 void loop() {
   if (startButton.pressed()) 
   {
+    lcd.clear();
     divert(false, false);
     lcd.clear();
     delay(100);
