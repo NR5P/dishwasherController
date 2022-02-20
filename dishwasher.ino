@@ -80,7 +80,7 @@ void loop() {
     delay(100);                     // Fill
 
     lcd.clear();
-    rinse();
+    rinse(false);
     delay(100);                     // Rinse
 
     lcd.clear();
@@ -104,7 +104,19 @@ void loop() {
     delay(100);                     // Fill
 
     lcd.clear();
-    rinse();
+    rinse(false);
+    delay(100);                     // Rinse
+
+    lcd.clear();
+    drain();
+    delay(100);                     // Drain
+
+    lcd.clear();
+    fill();
+    delay(100);                     // Fill
+
+    lcd.clear();
+    rinse(true);
     delay(100);                     // Rinse
 
     lcd.clear();
@@ -147,7 +159,7 @@ void fill() { //Fill cycle
   digitalWrite(waterInlet, HIGH);
 }
 
-void rinse() {
+void rinse(bool lastRinseCycle) {
   bool diverted = false;
   unsigned long beginningRinse = millis();
   unsigned long remaining = rinseTime;
@@ -158,6 +170,11 @@ void rinse() {
   while (((millis() - beginningRinse) < rinseTime) && stopNow == false) { 
     if (!stopNow)
       digitalWrite(washMotor, LOW);
+    if (lastRinseCycle) {
+      digitalWrite(soapDispensor, LOW);
+      delay(1000);
+      digitalWrite(soapDispensor, HIGH);
+    }
 
     actualMillis = millis();
     if((actualMillis - previoMillis) >= 60000){
